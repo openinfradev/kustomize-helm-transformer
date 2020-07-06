@@ -1,0 +1,33 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: glance
+spec:
+  chart:
+    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
+    path: glance
+    ref: master
+  releaseName: glance
+  targetNamespace: openstack
+  values:
+    bootstrap:
+      enabled: true
+      structured:
+        images:
+          cirros:
+            id: 201084fc-c276-4744-8504-cb974dbb3610
+            image_file: cirros-0.4.0-x86_64-disk.img
+            name: Cirros 0.4.0 64-bit
+            private: false
+            source_url: http://download.cirros-cloud.net/0.4.0/
+    conf:
+      ceph:
+        admin_keyring: admin_keyring
+        enabled: true
+      glance:
+        DEFAULT:
+          show_image_direct_url: true
+          show_multiple_locations: true
+        glance_store:
+          rbd_store_pool: images
+          rbd_store_user: glance
