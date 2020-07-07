@@ -1,0 +1,11 @@
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+global:
+  docker_registry: registry.cicd.stg.taco
+helmValues:
+  - chartName: glance
+    chartRef: taco-k8s-v20.07
+    override:
+      conf.ceph.admin_keyring: abcdefghijklmnop

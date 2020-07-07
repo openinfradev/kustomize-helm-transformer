@@ -2,4 +2,7 @@ module github.com/openinfradev/kustomize-helm-transformer/openinfradev.github.co
 
 go 1.13
 
-require sigs.k8s.io/kustomize/api v0.4.1
+require (
+	sigs.k8s.io/kustomize/api v0.4.1
+	sigs.k8s.io/yaml v1.2.0
+)
