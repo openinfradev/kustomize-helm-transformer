@@ -78,6 +78,9 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 }
 
 func (p *plugin) replaceChartRef(origin map[string]interface{}, chartRef string) (err error) {
+	if chartRef == "" {
+		return nil
+	}
 	releaseSpec := origin["spec"].(map[string]interface{})
 	chart := releaseSpec["chart"].(map[string]interface{})
 	chart["ref"] = chartRef
