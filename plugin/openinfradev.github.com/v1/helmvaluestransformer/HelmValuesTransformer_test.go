@@ -1,12 +1,10 @@
-
 package main_test
 
 import (
-        "testing"
+	"testing"
 
-        kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
-
 
 func TestHelmValuesTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
@@ -20,9 +18,12 @@ metadata:
   name: site
 global:
   docker_registry: registry.cicd.stg.taco
-helmValues:
+charts:
   - chartName: glance
     chartRef: taco-k8s-v20.07
+    override:
+      conf.ceph.admin_keyring: abcde
+      conf.ceph.enabled: true
 `, `
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
@@ -35,6 +36,11 @@ spec:
     ref: master
   releaseName: glance
   targetNamespace: openstack
+  values:
+    conf:
+      ceph:
+        admin_keyring: TACO_FIXME
+        enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: helm.fluxcd.io/v1
@@ -48,5 +54,10 @@ spec:
     ref: taco-k8s-v20.07
   releaseName: glance
   targetNamespace: openstack
+  values:
+    conf:
+      ceph:
+        admin_keyring: abcde
+        enabled: true
 `)
 }

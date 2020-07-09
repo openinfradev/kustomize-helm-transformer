@@ -4,7 +4,7 @@ metadata:
   name: site
 global:
   docker_registry: registry.cicd.stg.taco
-helmValues:
+charts:
   - chartName: glance
     chartRef: taco-k8s-v20.07
     override:
