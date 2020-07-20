@@ -5,8 +5,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/resid"
@@ -18,8 +20,8 @@ import (
 // Override values in HelmReleases
 type plugin struct {
 	h      *resmap.PluginHelpers
-	Global map[string]string `json:"global,omitempty" yaml:"global,omitempty"`
-	Charts []ReplacedChart   `json:"charts,omitempty" yaml:"charts,omitempty"`
+	Global map[string]interface{} `json:"global,omitempty" yaml:"global,omitempty"`
+	Charts []ReplacedChart        `json:"charts,omitempty" yaml:"charts,omitempty"`
 	Logger *log.Logger
 }
 
@@ -68,8 +70,11 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 		if err := p.replaceChartRef(origin.Map(), chart.ChartRef); err != nil {
 			return err
 		}
-		overrideResource := p.getResourceFromChart(chart)
-		if err := origin.Patch(overrideResource.Copy()); err != nil {
+		overrideResource, err := p.getResourceFromChart(chart)
+		if err != nil {
+			return err
+		}
+		if err = origin.Patch(overrideResource.Copy()); err != nil {
 			p.Logger.Println("patch error: " + err.Error())
 			return err
 		}
@@ -83,15 +88,24 @@ func (p *plugin) replaceChartRef(origin map[string]interface{}, chartRef string)
 	}
 	releaseSpec := origin["spec"].(map[string]interface{})
 	chart := releaseSpec["chart"].(map[string]interface{})
-	chart["ref"] = chartRef
+
+	newChartRef, err := p.replaceGlobalVar(chartRef)
+	if err != nil {
+		return err
+	}
+	chart["ref"] = newChartRef
 	return nil
 }
 
-func (p *plugin) getResourceFromChart(replacedChart ReplacedChart) (r *resource.Resource) {
+func (p *plugin) getResourceFromChart(replacedChart ReplacedChart) (r *resource.Resource, err error) {
 	patchMap := map[string]interface{}{}
 
 	for inlinePath, val := range replacedChart.Override {
-		p.createMapFromPaths(patchMap, strings.Split(inlinePath, "."), val)
+		newVal, err := p.replaceGlobalVar(val)
+		if err != nil {
+			return nil, err
+		}
+		p.createMapFromPaths(patchMap, strings.Split(inlinePath, "."), newVal)
 	}
 
 	resource := p.h.ResmapFactory().RF().FromMap(map[string]interface{}{
@@ -99,7 +113,7 @@ func (p *plugin) getResourceFromChart(replacedChart ReplacedChart) (r *resource.
 			"values": patchMap,
 		},
 	})
-	return resource
+	return resource, nil
 }
 
 // inlinePath is a path string using json dot notation
@@ -116,4 +130,33 @@ func (p *plugin) createMapFromPaths(chart map[string]interface{}, paths []string
 	}
 	chart[currentPath] = p.createMapFromPaths(chart[currentPath].(map[string]interface{}), paths[1:], val)
 	return chart
+}
+
+func (p *plugin) replaceGlobalVar(original interface{}) (interface{}, error) {
+	str := fmt.Sprintf("%v", original)
+	re := regexp.MustCompile(`\$\(([^\(\)])+\)`)
+	isMatched := re.MatchString(str)
+
+	// no global variable
+	if isMatched == false {
+		return original, nil
+	}
+
+	for isMatched {
+		findStr := re.FindString(str)
+		globalVar := p.Global[findStr[2:len(findStr)-1]]
+
+		// return error if global variable is not defined
+		if globalVar == nil {
+			return nil, errors.New("Can not found global variable named " + findStr)
+		}
+
+		if findStr == str {
+			return globalVar, nil
+		}
+
+		str = strings.Replace(str, findStr, fmt.Sprintf("%v", globalVar), -1)
+		isMatched = re.MatchString(str)
+	}
+	return str, nil
 }

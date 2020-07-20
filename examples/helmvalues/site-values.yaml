@@ -4,8 +4,10 @@ metadata:
   name: site
 global:
   docker_registry: registry.cicd.stg.taco
+  admin_keyring: abcdefghijk
+  chartRef: taco-k8s-v20.07
 charts:
   - chartName: glance
-    chartRef: taco-k8s-v20.07
+    chartRef: $(chartRef)
     override:
-      conf.ceph.admin_keyring: abcdefghijklmnop
+      conf.ceph.admin_keyring: $(admin_keyring)
