@@ -70,11 +70,13 @@ apiVersion: openinfradev.github.com/v1
 kind: HelmValuesTransformer
 metadata:
   name: site
+global:
+  admin_keyring: abcdefghijklmn
 charts:
   - chartName: glance
     chartRef: master
     override:
-      conf.ceph.admin_keyring: abcdefghijklmn
+      conf.ceph.admin_keyring: $(admin_keyring)
       conf.ceph.enabled: true
 `, `
 apiVersion: helm.fluxcd.io/v1
@@ -94,7 +96,7 @@ spec:
         admin_keyring: TACO_FIXME
         enabled: false
 `)
-        th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpected(rm, `
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
@@ -124,14 +126,17 @@ apiVersion: openinfradev.github.com/v1
 kind: HelmValuesTransformer
 metadata:
   name: site
+global:
+  chartRef: master
+  admin_keyring: abcdefghijklmn
 charts:
   - chartName: glance
-    chartRef: master
+    chartRef: $(chartRef)
     override:
-      conf.ceph.admin_keyring: abcdefghijklmn
+      conf.ceph.admin_keyring: $(admin_keyring)
       conf.ceph.enabled: true
   - chartName: cinder
-    chartRef: master
+    chartRef: $(chartRef)
     override:
       conf.ceph.admin_keyring: opqrstuvwxyz
 `, `
@@ -169,7 +174,7 @@ spec:
         admin_keyring: TACO_FIXME
         enabled: false
 `)
-        th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpected(rm, `
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
@@ -216,16 +221,22 @@ apiVersion: openinfradev.github.com/v1
 kind: HelmValuesTransformer
 metadata:
   name: site
+global:
+  glance_admin_keyring: abcdefghijklmn
+  cinder_admin_keyring: opqrstuvwxyz
+  docker_registry: sktdev
+  image_tag: taco-0.1.0
 charts:
   - chartName: glance
     chartRef: taco-k8s-v20.07
     override:
-      conf.ceph.admin_keyring: abcdefghijklmn
+      conf.ceph.admin_keyring: $(glance_admin_keyring)
       conf.ceph.enabled: true
+      images.tags.ks_user: $(docker_registry)/ubuntu-source-heat-engine-stein:$(image_tag)
   - chartName: cinder
     chartRef: feature-a
     override:
-      conf.ceph.admin_keyring: opqrstuvwxyz
+      conf.ceph.admin_keyring: $(cinder_admin_keyring)
 `, `
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
@@ -243,6 +254,9 @@ spec:
       ceph:
         admin_keyring: TACO_FIXME
         enabled: false
+    images:
+      tags:
+        ks_user: TACO_FIXME
 ---
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
@@ -261,7 +275,7 @@ spec:
         admin_keyring: TACO_FIXME
         enabled: false
 `)
-        th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpected(rm, `
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
@@ -278,6 +292,9 @@ spec:
       ceph:
         admin_keyring: abcdefghijklmn
         enabled: true
+    images:
+      tags:
+        ks_user: sktdev/ubuntu-source-heat-engine-stein:taco-0.1.0
 ---
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
