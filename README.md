@@ -68,13 +68,21 @@ spec:
         enabled: true
 ```
 
-## How to install
+## Installation
+### Quick Start (via Container)
+You can get the HelmValuesTransformer plugin installed kustomize container and can use it to build decapod yaml.
+Mount your decapod-yaml and excute docker run command with site specific decapod-yaml directory like this:
+```
+$ sudo docker run -it -v $(pwd)/examples:/decapod-yaml sktdev/decapod-kustomize:alpha /decapod-yaml/helmvalues > output.yml
+```
+And delete first line of output.yml. The line is debug message.
+### Manual Installation
 ```
 git clone https://github.com/openinfradev/kustomize-helm-transformer.git
 mkdir -p ~/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
 go build -buildmode plugin -o ~/.config/kustomize/plugin/openinfradev.github.com/v1/helmValuesTransformer/HelmValuesTransformer.so kustomize-helm-transformer/plugin/openinfradev.github.com/v1/helmvaluestransformer/HelmValuesTransformer.go
 ```
-### How to use
+### Usage
 ```
 kustomize build --enable_alpha_plugins kustomize-helm-transformer/examples/helmvalues/
 ```
