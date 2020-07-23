@@ -27,9 +27,17 @@ type plugin struct {
 
 // ReplacedChart is including target information and chart values to override
 type ReplacedChart struct {
-	ChartName string                 `json:"chartName,omitempty" yaml:"chartName,omitempty"`
-	ChartRef  string                 `json:"chartRef,omitempty" yaml:"chartRef,omitempty"`
-	Override  map[string]interface{} `json:"override,omitempty" yaml:"override,omitempty"`
+	Name     string                 `json:"name,omitempty" yaml:"name,omitempty"`
+	Source   ChartSource            `json:"source,omitemty" yaml:"source,omitempty"`
+	Override map[string]interface{} `json:"override,omitempty" yaml:"override,omitempty"`
+}
+
+// ChartSource defines the source of helm chart
+// TODO: support to use git source
+type ChartSource struct {
+	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
+	Name       string `json:"name,omitempty" yaml:"name,omitempty"`
+	Version    string `json:"version,omitempty" yamal:"version,omitempty"`
 }
 
 //nolint: golint
@@ -58,16 +66,16 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 	helmReleaseGvk := resid.Gvk{Group: "helm.fluxcd.io", Version: "v1", Kind: "HelmRelease"}
 	for _, chart := range p.Charts {
 		// replace references of HelmReleases
-		id := resid.NewResId(helmReleaseGvk, chart.ChartName)
+		id := resid.NewResId(helmReleaseGvk, chart.Name)
 		origin, err := m.GetById(id)
 		if err != nil {
 			return err
 		}
 		if origin == nil {
-			p.Logger.Println("Can't find HelmRelease name: " + chart.ChartName)
+			p.Logger.Println("Can't find HelmRelease name: " + chart.Name)
 			continue
 		}
-		if err := p.replaceChartRef(origin.Map(), chart.ChartRef); err != nil {
+		if err := p.replaceChartSource(origin.Map(), chart.Source); err != nil {
 			return err
 		}
 		overrideResource, err := p.getResourceFromChart(chart)
@@ -82,18 +90,25 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 	return nil
 }
 
-func (p *plugin) replaceChartRef(origin map[string]interface{}, chartRef string) (err error) {
-	if chartRef == "" {
-		return nil
-	}
+func (p *plugin) replaceChartSource(origin map[string]interface{}, chartSource ChartSource) (err error) {
 	releaseSpec := origin["spec"].(map[string]interface{})
 	chart := releaseSpec["chart"].(map[string]interface{})
-
-	newChartRef, err := p.replaceGlobalVar(chartRef)
-	if err != nil {
-		return err
+	if chartSource.Repository != "" {
+		repository, err := p.replaceGlobalVar(chartSource.Repository)
+		if err != nil {
+			return err
+		}
+		chart["repository"] = repository
 	}
-	chart["ref"] = newChartRef
+
+	if chartSource.Version != "" {
+		version, err := p.replaceGlobalVar(chartSource.Version)
+		if err != nil {
+			return err
+		}
+		chart["version"] = version
+	}
+
 	return nil
 }
 

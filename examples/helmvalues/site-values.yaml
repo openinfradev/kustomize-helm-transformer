@@ -5,9 +5,11 @@ metadata:
 global:
   docker_registry: registry.cicd.stg.taco
   admin_keyring: abcdefghijk
-  chartRef: taco-k8s-v20.07
+  repository: http://helm-chart-repository
 charts:
-  - chartName: glance
-    chartRef: $(chartRef)
+  - name: glance
+    source:
+      repository: $(repository)
+      version: 1.0.0
     override:
       conf.ceph.admin_keyring: $(admin_keyring)

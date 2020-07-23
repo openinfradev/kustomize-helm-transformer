@@ -4,9 +4,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    repository: TO_BE_FIXED
+    name: glance
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:

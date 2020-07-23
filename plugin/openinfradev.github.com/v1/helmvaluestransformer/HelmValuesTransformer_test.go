@@ -6,7 +6,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestHelmValuesTransformerChartRef(t *testing.T) {
+func TestHelmValuesTransformerChartSource(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		BuildGoPlugin("openinfradev.github.com", "v1", "HelmValuesTransformer")
 	defer th.Reset()
@@ -17,8 +17,10 @@ kind: HelmValuesTransformer
 metadata:
   name: site
 charts:
-  - chartName: glance
-    chartRef: taco-k8s-v20.07
+  - name: glance
+    source:
+      repository: http://repository:8879
+      version: 1.0.0
     override:
       conf.ceph.admin_keyring: abcde
       conf.ceph.enabled: true
@@ -29,9 +31,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    name: glance
+    repository: TO_BE_FIXED
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -47,9 +49,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: taco-k8s-v20.07
+    name: glance
+    repository: http://repository:8879
+    version: 1.0.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -73,8 +75,9 @@ metadata:
 global:
   admin_keyring: abcdefghijklmn
 charts:
-  - chartName: glance
-    chartRef: master
+  - name: glance
+    source:
+      repository: http://repository:8879
     override:
       conf.ceph.admin_keyring: $(admin_keyring)
       conf.ceph.enabled: true
@@ -85,9 +88,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    name: glance
+    repository: TO_BE_FIXED
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -103,9 +106,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    name: glance
+    repository: http://repository:8879
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -127,16 +130,18 @@ kind: HelmValuesTransformer
 metadata:
   name: site
 global:
-  chartRef: master
+  repository: http://repository:8879
   admin_keyring: abcdefghijklmn
 charts:
-  - chartName: glance
-    chartRef: $(chartRef)
+  - name: glance
+    source:
+      repository: $(repository)
     override:
       conf.ceph.admin_keyring: $(admin_keyring)
       conf.ceph.enabled: true
-  - chartName: cinder
-    chartRef: $(chartRef)
+  - name: cinder
+    source: 
+      repository: $(repository)
     override:
       conf.ceph.admin_keyring: opqrstuvwxyz
 `, `
@@ -146,9 +151,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    name: glance
+    repository: TO_BE_FIXED
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -163,9 +168,9 @@ metadata:
   name: cinder
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: cinder
-    ref: master
+    name: cinder
+    repository: TO_BE_FIXED
+    version: 0.1.0
   releaseName: cinder
   targetNamespace: openstack
   values:
@@ -181,9 +186,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    name: glance
+    repository: http://repository:8879
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -198,9 +203,9 @@ metadata:
   name: cinder
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: cinder
-    ref: master
+    name: cinder
+    repository: http://repository:8879
+    version: 0.1.0
   releaseName: cinder
   targetNamespace: openstack
   values:
@@ -227,14 +232,18 @@ global:
   docker_registry: sktdev
   image_tag: taco-0.1.0
 charts:
-  - chartName: glance
-    chartRef: taco-k8s-v20.07
+  - name: glance
+    source:
+      repository: http://repository-a:8879
+      version: 1.0.1
     override:
       conf.ceph.admin_keyring: $(glance_admin_keyring)
       conf.ceph.enabled: true
       images.tags.ks_user: $(docker_registry)/ubuntu-source-heat-engine-stein:$(image_tag)
-  - chartName: cinder
-    chartRef: feature-a
+  - name: cinder
+    source:
+      repository: http://repository-b:8879
+      version: 2.0.2
     override:
       conf.ceph.admin_keyring: $(cinder_admin_keyring)
 `, `
@@ -244,9 +253,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: master
+    name: glance
+    repository: TO_BE_FIXED
+    version: 0.1.0
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -264,9 +273,9 @@ metadata:
   name: cinder
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: cinder
-    ref: master
+    name: cinder
+    repository: TO_BE_FIXED
+    version: 0.1.0
   releaseName: cinder
   targetNamespace: openstack
   values:
@@ -282,9 +291,9 @@ metadata:
   name: glance
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: glance
-    ref: taco-k8s-v20.07
+    name: glance
+    repository: http://repository-a:8879
+    version: 1.0.1
   releaseName: glance
   targetNamespace: openstack
   values:
@@ -302,9 +311,9 @@ metadata:
   name: cinder
 spec:
   chart:
-    git: https://tde.sktelecom.com/stash/scm/openstack/openstack-helm.git
-    path: cinder
-    ref: feature-a
+    name: cinder
+    repository: http://repository-b:8879
+    version: 2.0.2
   releaseName: cinder
   targetNamespace: openstack
   values:
