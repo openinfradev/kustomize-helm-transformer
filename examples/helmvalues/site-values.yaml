@@ -6,10 +6,15 @@ global:
   docker_registry: registry.cicd.stg.taco
   admin_keyring: abcdefghijk
   repository: http://helm-chart-repository
+  storageClassName: ceph
 charts:
   - name: glance
     source:
       repository: $(repository)
       version: 1.0.0
     override:
-      conf.ceph.admin_keyring: $(admin_keyring)
+      volumeClaimTemplates: 
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          storageClassName: $(storageClassName)

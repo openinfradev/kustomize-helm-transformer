@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -148,9 +149,19 @@ func (p *plugin) createMapFromPaths(chart map[string]interface{}, paths []string
 }
 
 func (p *plugin) replaceGlobalVar(original interface{}) (interface{}, error) {
-	str := fmt.Sprintf("%v", original)
+	valueType := reflect.ValueOf(original).Kind()
+	var inlineStr string
+	// type checking of override value
+	if valueType == reflect.Float64 || valueType == reflect.Float32 || valueType == reflect.Int {
+		return original, nil
+	} else if valueType == reflect.String {
+		inlineStr = original.(string)
+	} else if valueType == reflect.Slice || valueType == reflect.Map {
+		val, _ := yaml.Marshal(original)
+		inlineStr = string(val)
+	}
 	re := regexp.MustCompile(`\$\(([^\(\)])+\)`)
-	isMatched := re.MatchString(str)
+	isMatched := re.MatchString(inlineStr)
 
 	// no global variable
 	if isMatched == false {
@@ -158,7 +169,7 @@ func (p *plugin) replaceGlobalVar(original interface{}) (interface{}, error) {
 	}
 
 	for isMatched {
-		findStr := re.FindString(str)
+		findStr := re.FindString(inlineStr)
 		globalVar := p.Global[findStr[2:len(findStr)-1]]
 
 		// return error if global variable is not defined
@@ -166,12 +177,17 @@ func (p *plugin) replaceGlobalVar(original interface{}) (interface{}, error) {
 			return nil, errors.New("Can not found global variable named " + findStr)
 		}
 
-		if findStr == str {
+		if findStr == inlineStr {
 			return globalVar, nil
 		}
 
-		str = strings.Replace(str, findStr, fmt.Sprintf("%v", globalVar), -1)
-		isMatched = re.MatchString(str)
+		inlineStr = strings.Replace(inlineStr, findStr, fmt.Sprintf("%v", globalVar), -1)
+		isMatched = re.MatchString(inlineStr)
 	}
-	return str, nil
+
+	if valueType != reflect.String {
+		err := yaml.Unmarshal([]byte(inlineStr), &original)
+		return original, err
+	}
+	return inlineStr, nil
 }
