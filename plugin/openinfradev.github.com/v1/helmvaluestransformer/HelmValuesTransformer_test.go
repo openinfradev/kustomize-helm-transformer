@@ -231,6 +231,7 @@ global:
   cinder_admin_keyring: opqrstuvwxyz
   docker_registry: sktdev
   image_tag: taco-0.1.0
+  storageClassName: ceph
 charts:
   - name: glance
     source:
@@ -240,6 +241,11 @@ charts:
       conf.ceph.admin_keyring: $(glance_admin_keyring)
       conf.ceph.enabled: true
       images.tags.ks_user: $(docker_registry)/ubuntu-source-heat-engine-stein:$(image_tag)
+      volumeClaimTemplates:
+      - metadata:
+          name: glance-data
+        spec:
+          storageClassName: $(storageClassName)
   - name: cinder
     source:
       repository: http://repository-b:8879
@@ -261,11 +267,12 @@ spec:
   values:
     conf:
       ceph:
-        admin_keyring: TACO_FIXME
+        admin_keyring: TO_BE_FIXED
         enabled: false
     images:
       tags:
-        ks_user: TACO_FIXME
+        ks_user: TO_BE_FIXED
+    volumeClaimTemplates: TO_BE_FIXED
 ---
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
@@ -281,7 +288,7 @@ spec:
   values:
     conf:
       ceph:
-        admin_keyring: TACO_FIXME
+        admin_keyring: TO_BE_FIXED
         enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, `
@@ -304,6 +311,11 @@ spec:
     images:
       tags:
         ks_user: sktdev/ubuntu-source-heat-engine-stein:taco-0.1.0
+    volumeClaimTemplates:
+    - metadata:
+        name: glance-data
+      spec:
+        storageClassName: ceph
 ---
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease

@@ -10,6 +10,7 @@ spec:
   releaseName: glance
   targetNamespace: openstack
   values:
+    volumeClaimTemplates: TO_BE_FIXED
     bootstrap:
       enabled: true
       structured:
@@ -31,3 +32,4 @@ spec:
         glance_store:
           rbd_store_pool: images
           rbd_store_user: glance
+
