@@ -272,7 +272,8 @@ spec:
     images:
       tags:
         ks_user: TO_BE_FIXED
-    volumeClaimTemplates: TO_BE_FIXED
+    volumeClaimTemplates:
+    - TO_BE_FIXED
 ---
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease

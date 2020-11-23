@@ -8,7 +8,7 @@ ENV PATH /usr/local/go/bin:$PATH
 ENV GOROOT /usr/local/go
 ENV GOPATH $HOME/golang
 
-RUN mkdir $HOME/golang
+RUN mkdir -p $HOME/golang
 RUN mkdir -p $HOME/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
 
 RUN apk update && apk add --no-cache curl git jq openssh libc6-compat build-base
@@ -29,5 +29,3 @@ RUN go test
 RUN mv HelmValuesTransformer.so $HOME/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer/
 
 WORKDIR /
-ENTRYPOINT ["kustomize", "build", "--enable_alpha_plugins"]
-CMD ["/decapod-yaml"]
