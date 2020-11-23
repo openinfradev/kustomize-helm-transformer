@@ -5,11 +5,11 @@ Please take a look at the [example](https://github.com/openinfradev/kustomize-he
 
 ## Dependencies
 ### User
-* kustomize v3.6.1 
+* kustomize v3.8.7
 
 ### Contributor
-* kustomize v3.6.1 
-* go 1.13 
+* kustomize v3.8.7
+* go 1.14
 
 ## Features
 * Inline value path transform
@@ -73,7 +73,7 @@ spec:
 You can get the HelmValuesTransformer plugin installed kustomize container and can use it to build decapod yaml.
 Mount your decapod-yaml and excute docker run command with site specific decapod-yaml directory like this:
 ```
-$ sudo docker run -it -v $(pwd)/examples:/decapod-yaml sktdev/decapod-kustomize:alpha /decapod-yaml/helmvalues > output.yml
+$ docker run -it -v $(pwd)/examples:/decapod-yaml sktdev/decapod-kustomize:v1 kustomize build --enable_alpha_plugins /decapod-yaml/helmvalues -o /decapod-yaml/output.yml
 ```
 And delete first line of output.yml. The line is debug message.
 ### Manual Installation

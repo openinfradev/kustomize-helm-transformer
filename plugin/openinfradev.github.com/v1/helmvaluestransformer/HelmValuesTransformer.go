@@ -12,9 +12,11 @@ import (
 	"regexp"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -83,12 +85,29 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 		if err != nil {
 			return err
 		}
-		if err = origin.Patch(overrideResource.Copy()); err != nil {
-			p.Logger.Println("patch error: " + err.Error())
+
+		err = p.applyPatch(origin, overrideResource)
+		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (p *plugin) applyPatch(resource, patch *resource.Resource) error {
+	node, err := filtersutil.GetRNode(patch)
+	if err != nil {
+		return err
+	}
+	n, ns := resource.GetName(), resource.GetNamespace()
+	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+		Patch: node,
+	}, resource)
+	if !resource.IsEmpty() {
+		resource.SetName(n)
+		resource.SetNamespace(ns)
+	}
+	return err
 }
 
 func (p *plugin) replaceChartSource(origin map[string]interface{}, chartSource ChartSource) (err error) {
