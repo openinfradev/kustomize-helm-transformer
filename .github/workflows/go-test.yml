@@ -1,0 +1,31 @@
+name: GoTest
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Get dependencies
+      run: |
+        cd plugin/openinfradev.github.com/v1/helmvaluestransformer
+        go get -v -t -d ./...
+
+    - name: Build
+      run: go build -buildmode plugin -o HelmValuesTransformer.so HelmValuesTransformer.go
+
+    - name: Test
+      run: go test -v .
