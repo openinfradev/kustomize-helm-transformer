@@ -10,7 +10,8 @@ spec:
   releaseName: glance
   targetNamespace: openstack
   values:
-    volumeClaimTemplates: TO_BE_FIXED
+    volumeClaimTemplates:
+    - TO_BE_FIXED
     bootstrap:
       enabled: true
       structured:
