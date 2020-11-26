@@ -1,0 +1,46 @@
+name: RunKustomize 
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  kustomize:
+    name: Kustomize
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Get Kustomize binary
+      env:
+        GO111MODULE: "on"
+      run: |
+        kustomize_version=$(sed -nr 's/\* kustomize [^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' README.md)
+        go get sigs.k8s.io/kustomize/kustomize/v3@v$kustomize_version
+
+    - name: Build
+      run: |
+        echo ">>> go build HelmValuesTransformer.go <<<"
+        mkdir -p ~/.config/kustomize/plugin/openinfradev.github.com/v1/helmValuesTransformer
+        cd plugin/openinfradev.github.com/v1/helmvaluestransformer
+        go get -v -t -d ./...
+        go build -buildmode plugin -o /home/runner/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer/HelmValuesTransformer.so HelmValuesTransformer.go
+        echo ">>> build completed! <<<"
+ 
+    - name: Go test
+      run: |
+        echo ">>> go test <<<"
+        cd plugin/openinfradev.github.com/v1/helmvaluestransformer
+        go test -v .
+        echo ">>> test completed! <<<"
+
+    - name: Run Plugin
+      run: kustomize build --enable_alpha_plugins examples/helmvalues
