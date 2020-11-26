@@ -4,10 +4,6 @@ It helps to manage a lot of HelmRelease's value in single transformer file.
 Please take a look at the [example](https://github.com/openinfradev/kustomize-helm-transformer/tree/master/examples/helmvalues)
 
 ## Dependencies
-### User
-* kustomize v3.8.7
-
-### Contributor
 * kustomize v3.8.7
 * go 1.14
 

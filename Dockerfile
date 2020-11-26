@@ -14,7 +14,8 @@ RUN mkdir -p $HOME/.config/kustomize/plugin/openinfradev.github.com/v1/helmvalue
 RUN apk update && apk add --no-cache curl git jq openssh libc6-compat build-base
 
 WORKDIR $HOME
-RUN git clone https://github.com/openinfradev/kustomize-helm-transformer.git
+#RUN git clone https://github.com/openinfradev/kustomize-helm-transformer.git
+COPY . $HOME/kustomize-helm-transformer
 RUN cat kustomize-helm-transformer/README.md | grep -m 1 "* kustomize" | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' > .kustomize_version
 RUN cat kustomize-helm-transformer/README.md | grep -m 1 "* go" | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' > .golang_version
 

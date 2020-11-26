@@ -22,7 +22,9 @@ jobs:
     - name: Get Kustomize binary
       env:
         GO111MODULE: "on"
-      run: go get sigs.k8s.io/kustomize/kustomize/v3@v3.8.7
+      run: |
+        kustomize_version=$(sed -nr 's/\* kustomize [^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' README.md)
+        go get sigs.k8s.io/kustomize/kustomize/v3@v$kustomize_version
 
     - name: Build
       run: |
@@ -32,6 +34,13 @@ jobs:
         go get -v -t -d ./...
         go build -buildmode plugin -o /home/runner/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer/HelmValuesTransformer.so HelmValuesTransformer.go
         echo ">>> build completed! <<<"
+ 
+    - name: Go test
+      run: |
+        echo ">>> go test <<<"
+        cd plugin/openinfradev.github.com/v1/helmvaluestransformer
+        go test -v .
+        echo ">>> test completed! <<<"
 
     - name: Run Plugin
       run: kustomize build --enable_alpha_plugins examples/helmvalues
