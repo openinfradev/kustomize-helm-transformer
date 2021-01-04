@@ -2,7 +2,7 @@ Contribution
 ------------
 ### Bug Report & Feature Request
 Please search issues [here](https://github.com/openinfradev/kustomize-helm-transformer/issues) before register new issue.  
-If there are no similar issues, you can create new issue [here](https://github.com/openinfradev/kustomize-helm-transformer/issues).
+If there are no similar issues, you can create new issue.
 
 ### How to Develop
 #### Code of Conduct
