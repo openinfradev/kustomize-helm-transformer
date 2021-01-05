@@ -6,6 +6,8 @@ Please take a look at the [example](https://github.com/openinfradev/kustomize-he
 ## Documents
 * [Quick Start](docs/quickstart.md)
 * [Contribution](docs/contribution.md)
+* [CI Pipeline](docs/ci.md)
+
 
 ## Support 
 * kustomize v3.8.7
