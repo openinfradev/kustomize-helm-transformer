@@ -3,14 +3,19 @@ HelmValuesTransformer is a Kustomize Plugin to transform values in `HelmRelease`
 It helps to manage a lot of HelmRelease's value in single transformer file.  
 Please take a look at the [example](https://github.com/openinfradev/kustomize-helm-transformer/tree/master/examples/helmvalues)
 
-## Dependencies
+## Documents
+* [Quick Start](docs/quickstart.md)
+* [Contribution](docs/contribution.md)
+
+## Support 
 * kustomize v3.8.7
-* go 1.14
 
 ## Features
-* Inline value path transform
-* Chart Ref transform
-<u>Source HelmRelease</u>
+1. Inline value path transform
+2.  Chart Ref transform
+
+## Example
+### Source HelmRelease
 ```
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
@@ -29,7 +34,7 @@ spec:
         admin_keyring: admin_keyring
         enabled: false
 ```
-<u>Transformer Configuration</u>
+### Transformer Configuration
 ```
 apiVersion: openinfradev.github.com/v1
 kind: HelmValuesTransformer
@@ -44,7 +49,7 @@ charts:
       conf.ceph.admin_keyring: abcde
       conf.ceph.enabled: true
 ```
-<u>Result</u>
+### Result
 ```
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
@@ -62,23 +67,4 @@ spec:
       ceph:
         admin_keyring: admin_keyring
         enabled: true
-```
-
-## Installation
-### Quick Start (via Container)
-You can get the HelmValuesTransformer plugin installed kustomize container and can use it to build decapod yaml.
-Mount your decapod-yaml and excute docker run command with site specific decapod-yaml directory like this:
-```
-$ docker run -it -v $(pwd)/examples:/decapod-yaml sktdev/decapod-kustomize:v1 kustomize build --enable_alpha_plugins /decapod-yaml/helmvalues -o /decapod-yaml/output.yml
-```
-And delete first line of output.yml. The line is debug message.
-### Manual Installation
-```
-git clone https://github.com/openinfradev/kustomize-helm-transformer.git
-mkdir -p ~/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
-go build -buildmode plugin -o ~/.config/kustomize/plugin/openinfradev.github.com/v1/helmValuesTransformer/HelmValuesTransformer.so kustomize-helm-transformer/plugin/openinfradev.github.com/v1/helmvaluestransformer/HelmValuesTransformer.go
-```
-### Usage
-```
-kustomize build --enable_alpha_plugins kustomize-helm-transformer/examples/helmvalues/
 ```
