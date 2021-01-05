@@ -6,7 +6,8 @@ If there are no similar issues, you can create new issue.
 
 ### How to Develop
 #### Code of Conduct
-Please read the [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md).
+This project complies with the [Code of Conduct(KOR)](https://github.com/openinfradev/community/blob/main/code-of-conduct.md) of `HANU community`.  
+Also you could find an additional [![Code of Conduct(Eng)](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md) in this project.
 
 #### Build and Test
 To build the kustomize plugin, please refer to the [Quick Start](quickstart.md).  
