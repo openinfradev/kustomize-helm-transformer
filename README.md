@@ -11,6 +11,7 @@ Please take a look at the [example](https://github.com/openinfradev/kustomize-he
 
 ## Support 
 * kustomize v3.8.7
+* go 1.14
 
 ## Features
 1. Inline value path transform
