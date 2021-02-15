@@ -11,7 +11,7 @@ ENV GOPATH $HOME/golang
 RUN mkdir -p $HOME/golang
 RUN mkdir -p $HOME/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
 
-RUN apk update && apk add --no-cache curl git jq openssh libc6-compat build-base bash
+RUN apk update && apk add --no-cache curl git jq openssh libc6-compat build-base bash urlencode
 
 WORKDIR $HOME
 COPY . $HOME/kustomize-helm-transformer
