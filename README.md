@@ -14,8 +14,8 @@ Please take a look at the [example](https://github.com/openinfradev/kustomize-he
 * go 1.14
 
 ## Features
-1. Inline value path transform
-2.  Chart Ref transform
+1. Replaced values of HelmRelease CustomResource using inline path
+2. Replaced Chart Source of HelmRelease CustomResource
 
 ## Example
 ### Source HelmRelease
@@ -23,18 +23,19 @@ Please take a look at the [example](https://github.com/openinfradev/kustomize-he
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
-  name: glance
+  name: prometheus
 spec:
   chart:
-    git: https://github.com/openstack/openstack-helm.git
-    path: glance
-    ref: master
-  releaseName: glance
-  targetNamespace: openstack
+    repository: https://prometheus-community.github.io/helm-charts
+    name: kube-prometheus-stack
+    version: 14.5.0
+    type: helmrepo
+  releaseName: prometheus
+  targetNamespace: lma
   values:
     conf:
       ceph:
-        admin_keyring: admin_keyring
+        admin_keyring: TO_BE_FIXED
         enabled: false
 ```
 ### Transformer Configuration
@@ -46,8 +47,12 @@ metadata:
 global:
   docker_registry: registry.cicd.stg.taco
 charts:
-  - chartName: glance
-    chartRef: taco-k8s-v20.07
+  - name: prometheus
+    source: 
+      repository: git@github.com:helm/charts
+      version: master
+      name: charts/stable/prometheus-operator
+      type: git
     override:
       conf.ceph.admin_keyring: abcde
       conf.ceph.enabled: true
@@ -57,17 +62,18 @@ charts:
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
-  name: glance
+  name: prometheus
 spec:
   chart:
-    git: https://github.com/openstack/openstack-helm.git
-    path: glance
-    ref: taco-k8s-v20.07
-  releaseName: glance
-  targetNamespace: openstack
+    repository: git@github.com:helm/charts
+    version: master
+    name: charts/stable/prometheus-operator
+    type: git
+  releaseName: prometheus
+  targetNamespace: lma
   values:
     conf:
       ceph:
-        admin_keyring: admin_keyring
+        admin_keyring: abcde
         enabled: true
 ```
