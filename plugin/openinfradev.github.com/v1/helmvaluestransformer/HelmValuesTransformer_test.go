@@ -336,3 +336,60 @@ spec:
         enabled: false
 `)
 }
+
+func TestGitChartSource(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("openinfradev.github.com", "v1", "HelmValuesTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: openinfradev.github.com/v1
+kind: HelmValuesTransformer
+metadata:
+  name: site
+charts:
+  - name: kube-prometheus-stack
+    source:
+      repository: git@github.com:helm/charts
+      version: master
+      name: charts/stable/prometheus-operator
+      type: git
+`, `
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+spec:
+  chart:
+    name: TO_BE_FIXED
+    repository: TO_BE_FIXED
+    version: TO_BE_FIXED
+    type: TO_BE_FIXED
+  releaseName: kube-prometheus-stack
+  targetNamespace: lma
+  values:
+    conf:
+      ceph:
+        admin_keyring: abcde
+        enabled: true
+`)
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+spec:
+  chart:
+    name: charts/stable/prometheus-operator
+    repository: git@github.com:helm/charts
+    type: git
+    version: master
+  releaseName: kube-prometheus-stack
+  targetNamespace: lma
+  values:
+    conf:
+      ceph:
+        admin_keyring: abcde
+        enabled: true
+`)
+}

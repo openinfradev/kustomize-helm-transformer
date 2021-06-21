@@ -36,11 +36,11 @@ type ReplacedChart struct {
 }
 
 // ChartSource defines the source of helm chart
-// TODO: support to use git source
 type ChartSource struct {
 	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
 	Name       string `json:"name,omitempty" yaml:"name,omitempty"`
-	Version    string `json:"version,omitempty" yamal:"version,omitempty"`
+	Version    string `json:"version,omitempty" yaml:"version,omitempty"`
+	Type       string `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
 //nolint: golint
@@ -129,6 +129,21 @@ func (p *plugin) replaceChartSource(origin map[string]interface{}, chartSource C
 		chart["version"] = version
 	}
 
+	if chartSource.Name != "" {
+		name, err := p.replaceGlobalVar(chartSource.Name)
+		if err != nil {
+			return err
+		}
+		chart["name"] = name
+	}
+
+	if chartSource.Type != "" {
+		chartType, err := p.replaceGlobalVar(chartSource.Type)
+		if err != nil {
+			return err
+		}
+		chart["type"] = chartType
+	}
 	return nil
 }
 
