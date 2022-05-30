@@ -4,7 +4,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,12 +11,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/filtersutil"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/resid"
+	"sigs.k8s.io/yaml"
 )
 
 // Override values in HelmReleases
@@ -31,7 +31,7 @@ type plugin struct {
 // ReplacedChart is including target information and chart values to override
 type ReplacedChart struct {
 	Name     string                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Source   ChartSource            `json:"source,omitemty" yaml:"source,omitempty"`
+	Source   ChartSource            `json:"source,omitempty" yaml:"source,omitempty"`
 	Override map[string]interface{} `json:"override,omitempty" yaml:"override,omitempty"`
 }
 
@@ -78,9 +78,16 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 			p.Logger.Println("Can't find HelmRelease name: " + chart.Name)
 			continue
 		}
-		if err := p.replaceChartSource(origin.Map(), chart.Source); err != nil {
+
+		overrideChartResource, err := p.getChartResource(chart.Source)
+		if err != nil {
 			return err
 		}
+		err = p.applyPatch(origin, overrideChartResource)
+		if err != nil {
+			return err
+		}
+
 		overrideResource, err := p.getResourceFromChart(chart)
 		if err != nil {
 			return err
@@ -103,48 +110,54 @@ func (p *plugin) applyPatch(resource, patch *resource.Resource) error {
 	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
-	if !resource.IsEmpty() {
+	if !resource.IsNilOrEmpty() {
 		resource.SetName(n)
 		resource.SetNamespace(ns)
 	}
 	return err
 }
 
-func (p *plugin) replaceChartSource(origin map[string]interface{}, chartSource ChartSource) (err error) {
-	releaseSpec := origin["spec"].(map[string]interface{})
-	chart := releaseSpec["chart"].(map[string]interface{})
+func (p *plugin) getChartResource(chartSource ChartSource) (r *resource.Resource, err error) {
+	patchChartMap := map[string]interface{}{}
 	if chartSource.Repository != "" {
 		repository, err := p.replaceGlobalVar(chartSource.Repository)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		chart["repository"] = repository
+		patchChartMap["repository"] = repository
 	}
 
 	if chartSource.Version != "" {
 		version, err := p.replaceGlobalVar(chartSource.Version)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		chart["version"] = version
+		patchChartMap["version"] = version
 	}
 
 	if chartSource.Name != "" {
 		name, err := p.replaceGlobalVar(chartSource.Name)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		chart["name"] = name
+		patchChartMap["name"] = name
 	}
 
 	if chartSource.Type != "" {
 		chartType, err := p.replaceGlobalVar(chartSource.Type)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		chart["type"] = chartType
+		patchChartMap["type"] = chartType
 	}
-	return nil
+
+	resource := p.h.ResmapFactory().RF().FromMap(map[string]interface{}{
+		"spec": map[string]interface{}{
+			"chart": patchChartMap,
+		},
+	})
+
+	return resource, nil
 }
 
 func (p *plugin) getResourceFromChart(replacedChart ReplacedChart) (r *resource.Resource, err error) {
@@ -198,7 +211,7 @@ func (p *plugin) replaceGlobalVar(original interface{}) (interface{}, error) {
 	isMatched := re.MatchString(inlineStr)
 
 	// no global variable
-	if isMatched == false {
+	if !isMatched {
 		return original, nil
 	}
 
