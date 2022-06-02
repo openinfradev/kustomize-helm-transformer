@@ -49,6 +49,8 @@ RUN unset GOPATH && unset GO111MODULES && ./hack/buildExternalGoPlugins.sh ./plu
 FROM alpine:edge
 LABEL AUTHOR Seungkyu Ahn (seungkyua@gmail.com)
 
+RUN apk add --no-cache bash git
+
 USER root
 
 RUN mkdir -p /root/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
