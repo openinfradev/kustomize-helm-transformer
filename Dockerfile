@@ -1,31 +1,59 @@
-FROM alpine:latest
+FROM golang:1.16.15-alpine3.15 AS builder
+LABEL AUTHOR Seungkyu Ahn (seungkyua@gmail.com)
 
-MAINTAINER SKTelecom 5GX Cloud Labs
-
+ENV KUSTOMIZE_VER v4.2.0
 ENV HOME /root
-ENV GO111MODULE on
-ENV PATH /usr/local/go/bin:$PATH
-ENV GOROOT /usr/local/go
 ENV GOPATH $HOME/golang
+# on means using vendor directory
+ENV GO111MODULE on
+# CGO_ENABLED=1 default value means using link
+ENV CGO_ENABLED 1
 
-RUN mkdir -p $HOME/golang
-RUN mkdir -p $HOME/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
 
-RUN apk update && apk add --no-cache curl git jq openssh libc6-compat build-base bash
+RUN apk update && apk add git curl tar bash build-base
+
 
 WORKDIR $HOME
 COPY . $HOME/kustomize-helm-transformer
-RUN cat kustomize-helm-transformer/README.md | grep -m 1 "* kustomize" | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' > .kustomize_version
-RUN cat kustomize-helm-transformer/README.md | grep -m 1 "* go" | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' > .golang_version
 
-WORKDIR /usr/local
-RUN curl -fL https://dl.google.com/go/go$(cat $HOME/.golang_version).linux-amd64.tar.gz | tar xz
 
-RUN go get sigs.k8s.io/kustomize/kustomize/v3@v$(cat $HOME/.kustomize_version)
-RUN mv $GOPATH/bin/kustomize /usr/local/bin/
+# install kustomize from source
+WORKDIR $HOME
+RUN git clone https://github.com/kubernetes-sigs/kustomize.git
+WORKDIR $HOME/kustomize
+RUN git checkout -b tags_${KUSTOMIZE_VER} tags/kustomize/${KUSTOMIZE_VER}
+WORKDIR $HOME/kustomize/kustomize
+RUN unset GOPATH && unset GO111MODULES && go install .
+RUN cp $HOME/go/bin/kustomize /usr/local/bin/
 
-WORKDIR $HOME/kustomize-helm-transformer/plugin/openinfradev.github.com/v1/helmvaluestransformer/
-RUN go test
-RUN mv HelmValuesTransformer.so $HOME/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer/
 
-WORKDIR /
+# plugin copy
+RUN rm -rf $HOME/kustomize/plugin/*
+RUN cp -r $HOME/kustomize-helm-transformer/plugin/openinfradev.github.com $HOME/kustomize/plugin/
+
+
+WORKDIR $HOME/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
+RUN rm -rf vendor && rm -f go.mod go.sum
+RUN mv kustomize-${KUSTOMIZE_VER}-go.mod go.mod
+# update go.mod and go.sum
+RUN unset GOPATH && unset GO111MODULES && go mod tidy
+
+
+WORKDIR $HOME/kustomize
+RUN unset GOPATH && unset GO111MODULES && ./hack/buildExternalGoPlugins.sh ./plugin
+
+
+
+
+
+FROM alpine:edge
+LABEL AUTHOR Seungkyu Ahn (seungkyua@gmail.com)
+
+USER root
+
+RUN mkdir -p /root/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer
+COPY --from=builder /root/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer/HelmValuesTransformer.so /root/.config/kustomize/plugin/openinfradev.github.com/v1/helmvaluestransformer/
+COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
+WORKDIR /root
+
+CMD ["kustomize"]
