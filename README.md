@@ -10,8 +10,8 @@ Please take a look at the [example](https://github.com/openinfradev/kustomize-he
 
 
 ## Support 
-* kustomize v3.8.7
-* go 1.14
+* kustomize v4.2.0
+* go 1.16.15
 
 ## Features
 1. Replaced values of HelmRelease CustomResource using inline path

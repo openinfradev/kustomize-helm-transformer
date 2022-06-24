@@ -1,17 +1,22 @@
-module github.com/openinfradev/kustomize-helm-transformer/openinfradev.github.com/v1
+module github.com/openinfradev/kustomize-helm-transformer/plugin/openinfradev.github.com/v1/helmvaluestransformer
 
-go 1.14
+go 1.16
 
 require (
-	github.com/google/go-cmp v0.5.2 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	k8s.io/client-go v0.18.10 // indirect
-	sigs.k8s.io/kustomize/api v0.6.5
-	sigs.k8s.io/kustomize/kyaml v0.9.4
+	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
+	github.com/go-errors/errors v1.4.2 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
+	github.com/go-openapi/swag v0.21.1 // indirect
+	github.com/google/gnostic v0.6.9 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/pkg/errors v0.9.1
+	github.com/xlab/treeprint v1.1.0 // indirect
+	go.starlark.net v0.0.0-20220328144851-d1966c6b9fcd // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20220413171646-5e7f5fdc6da6 // indirect
+	sigs.k8s.io/kustomize/api v0.11.5
+	sigs.k8s.io/kustomize/kyaml v0.13.7
+	sigs.k8s.io/yaml v1.3.0
 )
