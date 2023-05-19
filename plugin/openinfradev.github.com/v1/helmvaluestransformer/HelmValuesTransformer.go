@@ -43,8 +43,8 @@ type ChartSource struct {
 	Type       string `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
-//nolint: golint
-//noinspection GoUnusedGlobalVariable
+// nolint: golint
+// noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
@@ -168,7 +168,8 @@ func (p *plugin) getResourceFromChart(replacedChart ReplacedChart) (r *resource.
 		if err != nil {
 			return nil, err
 		}
-		p.createMapFromPaths(patchMap, strings.Split(inlinePath, "."), newVal)
+		paths := splitButIgnoreEscapedDot(inlinePath, "\uffff")
+		p.createMapFromPaths(patchMap, paths, newVal)
 	}
 
 	resource := p.h.ResmapFactory().RF().FromMap(map[string]interface{}{
@@ -237,4 +238,14 @@ func (p *plugin) replaceGlobalVar(original interface{}) (interface{}, error) {
 		return original, err
 	}
 	return inlineStr, nil
+}
+
+func splitButIgnoreEscapedDot(input, placeholder string) []string {
+	temp := strings.ReplaceAll(input, "\\.", placeholder)
+	parts := strings.Split(temp, ".")
+
+	for i := range parts {
+		parts[i] = strings.ReplaceAll(parts[i], placeholder, ".")
+	}
+	return parts
 }

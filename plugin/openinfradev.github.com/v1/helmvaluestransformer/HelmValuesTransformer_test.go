@@ -232,12 +232,22 @@ global:
   docker_registry: sktdev
   image_tag: taco-0.1.0
   storageClassName: ceph
+  grafanaDomain: grafana.example.com
+  keycloakDomain: keycloak.example.com
+  realms: openinfradev
 charts:
   - name: glance
     source:
       repository: http://repository-a:8879
       version: 1.0.1
     override:
+      grafana\.ini: 
+        server:
+          domain: $(grafanaDomain)
+          root_url: $(grafanaDomain)/grafana
+        auth.generic_oauth:
+          enabled: true
+          auth_url: https://$(keycloakDomain)/auth/realms/$(realms)/protocol/openid-connect/auth
       conf.ceph.admin_keyring: $(glance_admin_keyring)
       conf.ceph.enabled: true
       images.tags.ks_user: $(docker_registry)/ubuntu-source-heat-engine-stein:$(image_tag)
@@ -265,6 +275,7 @@ spec:
   releaseName: glance
   targetNamespace: openstack
   values:
+    grafana.ini:
     conf:
       ceph:
         admin_keyring: TO_BE_FIXED
@@ -309,6 +320,13 @@ spec:
       ceph:
         admin_keyring: abcdefghijklmn
         enabled: true
+    grafana.ini:
+      auth.generic_oauth:
+        auth_url: https://keycloak.example.com/auth/realms/openinfradev/protocol/openid-connect/auth
+        enabled: true
+      server:
+        domain: grafana.example.com
+        root_url: grafana.example.com/grafana
     images:
       tags:
         ks_user: sktdev/ubuntu-source-heat-engine-stein:taco-0.1.0
